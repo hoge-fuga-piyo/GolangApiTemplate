@@ -3,34 +3,61 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
+	// クロージャを使うパターン
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello World")
 	})
+
+	// クロージャを使わないパターン
 	http.HandleFunc("/hoge", hogeHandler)
+
+	// POSTリクエストのみ受け付ける
 	http.HandleFunc("/post", postHandler)
+
+	// GETリクエストのみ受け付ける
+	http.HandleFunc("/get", getHandler)
+
+	// リクエストパラメータを取得する
 	http.HandleFunc("/request_params", requestParamsHandler)
+
+	// mapを使ってjson形式のレスポンスを返す
+	http.HandleFunc("/json/map", jsonWithMapHandler)
+
+	// 構造体を使ってjson形式のレスポンスを返す
+	http.HandleFunc("/json/struct", jsonWithStructHandler)
 
 	http.ListenAndServe(":8080", nil)
 }
 
-func hogeHandler(w http.ResponseWriter, r *http.Request){
+func hogeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "hogehoge")
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request){
+func postHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)	// 405
 		w.Write([]byte("Only post"))
 		return
 	}
 
-	w.Write([]byte("OK"))
+	w.Write([]byte("POST OK"))
 }
 
-func requestParamsHandler(w http.ResponseWriter, r *http.Request){
+func getHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)	// 405
+		w.Write([]byte("Only get"))
+		return
+	}
+
+	w.Write([]byte("GET OK"))
+}
+
+func requestParamsHandler(w http.ResponseWriter, r *http.Request) {
 	// クエリパラメータの取得
 	fmt.Fprintf(w, "Query:%s\n", r.URL.RawQuery)
 
@@ -44,4 +71,27 @@ func requestParamsHandler(w http.ResponseWriter, r *http.Request){
 	// クエリパラメータ、Formデータの両方
 	params := r.Form
 	fmt.Fprintf(w, "Form2:\n%v\n", params)
+}
+
+func jsonWithMapHandler(w http.ResponseWriter, r *http.Request) {
+	hash := make(map[string]string)
+	hash["hoge"] = "hogehoge"
+	hash["fuga"] = "fugafuga"
+
+	json.NewEncoder(w).Encode(hash)
+}
+
+type JsonStrict struct {
+	Hoge string `json:"hoge"` 
+	Fuga int	`json:"fuga"`
+	Piyo bool	`json:"piyo"`
+}
+
+func jsonWithStructHandler(w http.ResponseWriter, r *http.Request) {
+	st := JsonStrict{}
+	st.Hoge = "hogehoge"
+	st.Fuga = 100
+	st.Piyo = true
+
+	json.NewEncoder(w).Encode(st)
 }
