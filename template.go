@@ -81,14 +81,14 @@ func jsonWithMapHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(hash)
 }
 
-type JsonStrict struct {
-	Hoge string `json:"hoge"` 
+type JsonStruct struct {
+	Hoge string	`json:"hoge"` 
 	Fuga int	`json:"fuga"`
 	Piyo bool	`json:"piyo"`
 }
 
 func jsonWithStructHandler(w http.ResponseWriter, r *http.Request) {
-	st := JsonStrict{}
+	st := JsonStruct{}
 	st.Hoge = "hogehoge"
 	st.Fuga = 100
 	st.Piyo = true
